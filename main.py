@@ -1,16 +1,46 @@
-# This is a sample Python script.
+from book import Book
+from library import Library
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+def main():
+    library = Library()
 
+    while True:
+        print("\n--- Kütüphane Menüsü ---")
+        print("1. Kitap Ekle")
+        print("2. Kitap Sil")
+        print("3. Kitapları Listele")
+        print("4. Kitap Ara")
+        print("5. Çıkış")
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+        choice = input("Seçiminizi yapın: ")
 
+        if choice == "1":
+            title = input("Kitap adı: ")
+            author = input("Yazar: ")
+            isbn = input("ISBN: ")
+            book = Book(title, author, isbn)
+            library.add_book(book)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+        elif choice == "2":
+            isbn = input("Silinecek kitabın ISBN numarası: ")
+            library.remove_book(isbn)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        elif choice == "3":
+            library.list_books()
+
+        elif choice == "4":
+            isbn = input("Aranacak kitabın ISBN numarası: ")
+            book = library.find_book(isbn)
+            if book:
+                print(book)
+            else:
+                print("Kitap bulunamadı.")
+
+        elif choice == "5":
+            print("Çıkış yapılıyor...")
+            break
+        else:
+            print("Geçersiz seçim!")
+
+if __name__ == "__main__":
+    main()

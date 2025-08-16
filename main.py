@@ -6,7 +6,7 @@ def main():
 
     while True:
         print("\n--- Kütüphane Menüsü ---")
-        print("1. Kitap Ekle")
+        print("1. Kitap Ekle (Sadece ISBN ile)")
         print("2. Kitap Sil")
         print("3. Kitapları Listele")
         print("4. Kitap Ara")
@@ -15,11 +15,8 @@ def main():
         choice = input("Seçiminizi yapın: ")
 
         if choice == "1":
-            title = input("Kitap adı: ")
-            author = input("Yazar: ")
-            isbn = input("ISBN: ")
-            book = Book(title, author, isbn)
-            library.add_book(book)
+            isbn = input("Eklenecek kitabın ISBN numarası: ")
+            library.add_book(isbn)
 
         elif choice == "2":
             isbn = input("Silinecek kitabın ISBN numarası: ")

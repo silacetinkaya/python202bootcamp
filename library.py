@@ -1,6 +1,6 @@
 import json
 import os
-import httpx  # Yeni eklenen kütüphane
+import httpx
 from book import Book
 
 
@@ -11,7 +11,6 @@ class Library:
         self.load_books()
 
     def load_books(self):
-        """Uygulama başladığında library.json dosyasından kitapları yükler."""
         if os.path.exists(self.json_file):
             with open(self.json_file, 'r') as f:
                 try:
@@ -23,38 +22,53 @@ class Library:
             self.books = []
 
     def save_books(self):
-        """Kütüphanede bir değişiklik olduğunda (ekleme/silme) tüm kitap listesini library.json dosyasına yazar."""
         data = [{'title': book.title, 'author': book.author, 'isbn': book.isbn} for book in self.books]
         with open(self.json_file, 'w') as f:
             json.dump(data, f, indent=4)
 
     def add_book(self, isbn):
-        """ISBN numarasıyla harici API'den kitap bilgilerini çekerek kütüphaneye ekler."""
         if self.find_book(isbn):
             print(f"Hata: {isbn} ISBN numaralı kitap zaten kütüphanede mevcut.")
             return
 
         print("Kitap bilgileri aranıyor...")
-        url = f"https://openlibrary.org/isbn/{isbn}.json"
 
         try:
-            response = httpx.get(url, timeout=10)
-            response.raise_for_status()  # HTTP hataları için hata fırlatır (örn: 404)
+            url = f"https://openlibrary.org/isbn/{isbn}.json"
+            response = httpx.get(url, timeout=10, follow_redirects=True)
+            response.raise_for_status()
             data = response.json()
 
             title = data.get('title')
-            authors_data = data.get('authors', [])
-            author = ", ".join(
-                [httpx.get(f"https://openlibrary.org{auth['key']}.json").json().get('name', 'Bilinmiyor') for auth in
-                 authors_data])
 
-            if title and author:
+            authors_data = data.get('authors', [])
+            author_names = []
+
+            for author_info in authors_data:
+                author_key = author_info.get('key')
+                if author_key:
+                    try:
+                        author_url = f"https://openlibrary.org{author_key}.json"
+                        author_response = httpx.get(author_url, timeout=10, follow_redirects=True)
+                        author_response.raise_for_status()
+                        author_data = author_response.json()
+                        author_name = author_data.get('name')
+                        if author_name:
+                            author_names.append(author_name)
+                    except httpx.HTTPStatusError:
+                        continue
+                    except httpx.RequestError:
+                        continue
+
+            author = ", ".join(author_names) if author_names else "Bilinmiyor"
+
+            if title:
                 new_book = Book(title, author, isbn)
                 self.books.append(new_book)
                 self.save_books()
                 print(f"'{title}' kütüphaneye başarıyla eklendi.")
             else:
-                print("Hata: API'den gerekli kitap bilgileri (başlık/yazar) alınamadı.")
+                print("Hata: API'den gerekli kitap bilgileri (başlık) alınamadı.")
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
@@ -67,14 +81,12 @@ class Library:
             print(f"Beklenmeyen bir hata oluştu: {e}")
 
     def find_book(self, isbn):
-        """ISBN ile belirli bir kitabı bulur ve Book nesnesini döndürür."""
         for book in self.books:
             if book.isbn == isbn:
                 return book
         return None
 
     def remove_book(self, isbn):
-        """ISBN numarasına göre bir kitabı kütüphaneden siler ve dosyayı günceller."""
         book_to_remove = self.find_book(isbn)
         if book_to_remove:
             self.books.remove(book_to_remove)
@@ -84,7 +96,6 @@ class Library:
             print(f"Hata: '{isbn}' ISBN numaralı kitap bulunamadı.")
 
     def list_books(self):
-        """Kütüphanedeki tüm kitapları listeler."""
         if not self.books:
             print("Kütüphanede hiç kitap yok.")
             return []

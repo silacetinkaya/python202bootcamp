@@ -1,5 +1,5 @@
-from book import Book
-from library import Library
+from library import Library, fetch_book_from_api
+
 
 def main():
     library = Library()
@@ -15,18 +15,31 @@ def main():
         choice = input("Seçiminizi yapın: ")
 
         if choice == "1":
-            isbn = input("Eklenecek kitabın ISBN numarası: ")
-            library.add_book(isbn)
+            isbn = input("Eklenecek kitabın ISBN numarası: ").strip()
+            if not isbn:
+                print("ISBN boş olamaz!")
+                continue
+
+            book = fetch_book_from_api(isbn)
+            if book:
+                library.add_book(book)
 
         elif choice == "2":
-            isbn = input("Silinecek kitabın ISBN numarası: ")
-            library.remove_book(isbn)
+            isbn = input("Silinecek kitabın ISBN numarası: ").strip()
+            if library.remove_book(isbn):
+                print("Kitap başarıyla silindi.")
 
         elif choice == "3":
-            library.list_books()
+            books = library.list_books()
+            if not books:
+                print("Kütüphanede hiç kitap yok.")
+            else:
+                print("\n--- Kütüphanedeki Kitaplar ---")
+                for book in books:
+                    print(book)
 
         elif choice == "4":
-            isbn = input("Aranacak kitabın ISBN numarası: ")
+            isbn = input("Aranacak kitabın ISBN numarası: ").strip()
             book = library.find_book(isbn)
             if book:
                 print(book)
@@ -38,6 +51,7 @@ def main():
             break
         else:
             print("Geçersiz seçim!")
+
 
 if __name__ == "__main__":
     main()
